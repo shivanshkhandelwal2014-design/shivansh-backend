@@ -19,7 +19,6 @@ let users = [
 ];
 
 let keys = [];
-let resellers = [];
 
 // ===== LOGIN =====
 app.post("/login", (req, res) => {
@@ -60,7 +59,7 @@ app.post("/register", (req, res) => {
   }
 });
 
-// ===== GENERATE KEYS (UPDATED FORMAT) =====
+// ===== GENERATE KEYS =====
 app.post("/keys/generate", (req, res) => {
   try {
     const {
@@ -72,7 +71,6 @@ app.post("/keys/generate", (req, res) => {
 
     let generated = [];
 
-    // buyer name clean
     const cleanName = buyer_name.replace(/\s+/g, '').toLowerCase();
 
     for (let i = 0; i < numberOfKeys; i++) {
@@ -104,7 +102,7 @@ app.post("/keys/generate", (req, res) => {
   }
 });
 
-// ===== GET KEYS (FIXED FILTER) =====
+// ===== GET KEYS =====
 app.get("/keys", (req, res) => {
   try {
     const { username, isSuper } = req.query;
@@ -144,10 +142,63 @@ app.put("/keys/:id", (req, res) => {
   res.json({ message: "Key updated" });
 });
 
-// ===== RESELLERS (FOR DASHBOARD) =====
+
+// ==============================
+// 🔥 RESELLER SYSTEM (FULL FIX)
+// ==============================
+
+// GET ALL RESELLERS (users hi return karenge)
 app.get("/resellers", (req, res) => {
+  const resellers = users.filter(u => !u.isSuperAdmin);
   res.json(resellers);
 });
+
+// ADD CREDITS
+app.post("/resellers/add-credits", (req, res) => {
+  try {
+    const { resellerId, amountToAdd } = req.body;
+
+    const user = users.find(u => u._id == resellerId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.credits += amountToAdd;
+
+    res.json({ message: "Credits added" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// DELETE RESELLER
+app.delete("/resellers/:id", (req, res) => {
+  users = users.filter(u => u._id != req.params.id);
+  res.json({ message: "Reseller deleted" });
+});
+
+// PROMOTE TO SUPER ADMIN
+app.post("/admins/promote", (req, res) => {
+  try {
+    const { targetAdminId } = req.body;
+
+    const user = users.find(u => u._id == targetAdminId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.isSuperAdmin = true;
+
+    res.json({ message: "Promoted to Super Admin" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ==============================
+
 
 // ===== ROOT =====
 app.get("/", (req, res) => {
