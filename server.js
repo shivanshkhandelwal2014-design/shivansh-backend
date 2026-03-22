@@ -7,7 +7,7 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-// ===== DATABASE (TEMP) =====
+// ===== TEMP DATABASE =====
 let users = [
   {
     _id: "1",
@@ -60,7 +60,7 @@ app.post("/register", (req, res) => {
   }
 });
 
-// ===== GENERATE KEYS =====
+// ===== GENERATE KEYS (UPDATED FORMAT) =====
 app.post("/keys/generate", (req, res) => {
   try {
     const {
@@ -72,10 +72,16 @@ app.post("/keys/generate", (req, res) => {
 
     let generated = [];
 
+    // buyer name clean
+    const cleanName = buyer_name.replace(/\s+/g, '').toLowerCase();
+
     for (let i = 0; i < numberOfKeys; i++) {
-      const key =
-        "KEY-" +
-        Math.random().toString(36).substring(2, 8).toUpperCase();
+      const randomPart = Math.random()
+        .toString(36)
+        .substring(2, 8)
+        .toUpperCase();
+
+      const key = `${cleanName}-${randomPart}`;
 
       const newKey = {
         _id: Date.now().toString() + i,
@@ -138,24 +144,9 @@ app.put("/keys/:id", (req, res) => {
   res.json({ message: "Key updated" });
 });
 
-// ===== RESELLERS (FIX FOR DASHBOARD) =====
+// ===== RESELLERS (FOR DASHBOARD) =====
 app.get("/resellers", (req, res) => {
   res.json(resellers);
-});
-
-// ===== ADD RESELLER (OPTIONAL) =====
-app.post("/resellers", (req, res) => {
-  const { username } = req.body;
-
-  const newReseller = {
-    _id: Date.now().toString(),
-    username,
-    credits: 0,
-    isSuperAdmin: false
-  };
-
-  resellers.push(newReseller);
-  res.json(newReseller);
 });
 
 // ===== ROOT =====
@@ -163,7 +154,7 @@ app.get("/", (req, res) => {
   res.send("Server is running 🚀");
 });
 
-// ===== START =====
+// ===== START SERVER =====
 app.listen(PORT, () => {
   console.log("Server running on port " + PORT);
 });
